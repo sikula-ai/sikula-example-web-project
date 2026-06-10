@@ -1,0 +1,137 @@
+# Sikula project configuration for the sikula-example-web-project demo.
+#
+# This config is intentionally small but production-shaped: agents may edit only
+# app source, tests are isolated to tests/, and validation runs typecheck, tests,
+# and a production bundle. Run from the repo root:
+#   sikula run .sikula/tasks/build-modern-web-example.md
+
+project:
+  name: sikula-example-web-project
+  root_path: .
+  build_tool: node
+  platform: Web
+  language: TypeScript
+  ui: React + Vite
+
+sandbox:
+  # Production implementation scope. Keep this narrow for demo runs so Sikula's
+  # final diff is easy to inspect.
+  allowed_write_paths:
+    - src/
+  # TestWriterAgent writes only test files.
+  allowed_test_write_paths:
+    - tests/
+  # Keep read context focused so generated outputs and dependencies do not
+  # become accidental source material for agent decisions.
+  allowed_read_paths:
+    - src/
+    - tests/
+    - .sikula/config.yaml
+    - .sikula/tasks/
+    - .sikula/guidelines.md
+    - AGENTS.md
+    - CLAUDE.md
+    - README.md
+    - docs/
+    - package.json
+    - bun.lock
+    - index.html
+    - tsconfig.json
+    - tsconfig.app.json
+    - tsconfig.node.json
+    - vite.config.ts
+  max_iterations: 10
+  max_review_iterations: 3
+  max_security_review_iterations: 3
+
+tasks:
+  state_dir: .sikula/state/
+
+progress:
+  heartbeat_interval_seconds: 60
+
+llm:
+  provider: codex
+  model: gpt-5.3-codex-spark
+  max_tokens: 16000
+  agent_timeout: 1800
+
+agents:
+  analyst:
+    llm:
+      model: gpt-5.5
+  reviewer:
+    llm:
+      model: gpt-5.5
+  security_reviewer:
+    llm:
+      model: gpt-5.5
+  implementer:
+    llm:
+      agent_timeout: 2400
+  test_writer:
+    llm:
+      agent_timeout: 2400
+
+run_planner: true
+run_presync: false
+run_build_per_step: false
+run_review: true
+run_security_review: true
+run_build: true
+run_test_writing: true
+run_tests: true
+run_checks: true
+
+build:
+  package_manager: bun
+  sync_command: "bun install --frozen-lockfile"
+  # Optional: adopt project-specific source-controlled files generated or updated by sync().
+  # Platform defaults already cover existing tracked package-manager lockfiles.
+  # Use this only for generated files that belong in the final diff; keep caches/build outputs gitignored.
+  # sync_adopt_paths:
+  #   - "src/generated/api/"
+  #   - "schema/generated/**/*.json"
+  compile_command: "bun run typecheck"
+  test_command: "bun run test"
+  sync_timeout: 600
+  compile_timeout: 600
+  test_timeout: 600
+  checks:
+    - name: production-build
+      command: "bun run build"
+      timeout: 600
+
+security:
+  context: >
+    Static browser demo for a Bun, Vite, React, and TypeScript starter. No
+    authentication, accounts, payments, cookies, analytics, telemetry, backend,
+    user-submitted data, secrets, or runtime network calls are expected. Main
+    risks are accidentally adding remote assets/scripts, tracking, unsafe HTML
+    insertion, secrets, environment-variable requirements, or dependencies
+    outside the task scope.
+
+guidelines:
+  context_files:
+    - AGENTS.md
+    - CLAUDE.md
+    - README.md
+    - .sikula/guidelines.md
+    - docs/sikula-demo.md
+  max_file_chars: 30000
+
+planner:
+  max_steps: 6
+
+test_writer:
+  # Minimum branch+line coverage target within the configured test surface (percentage).
+  coverage_target: 80
+  # Test surface policy:
+  # existing_infrastructure = stay within existing project test infra; missing heavy
+  # UI/browser/device/runtime harnesses are not gaps by themselves.
+  # complete = opt in to TESTABILITY GAP reports when important behaviour needs missing
+  # test infra outside the existing surface.
+  test_surface_policy: existing_infrastructure
+  # What to do when safe tests require missing project seams/infrastructure:
+  # warn = record a visible audit warning; fail = fail the task.
+  testability_gap_policy: warn
