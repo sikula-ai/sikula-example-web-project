@@ -9,7 +9,8 @@ The app itself is intentionally simple. The important part is the Sikula setup:
 - `.sikula/tasks/build-modern-web-example.md` is a self-contained feature request.
 - `.sikula/guidelines.md` and `AGENTS.md` give agents project-specific rules.
 - `.sikula/state/` records auditable run state after Sikula executes a task.
-- `docs/sikula-demo.md` provides a compact reference for the demo workflow.
+- [`docs/sikula-demo.md`](docs/sikula-demo.md) provides a compact reference for
+  the demo workflow.
 
 The intended path is:
 
@@ -96,7 +97,8 @@ sikula/build-modern-web-example-<task-id>
 ```
 
 That branch should contain the implementation commit after the configured
-pipeline has accepted the task.
+pipeline has accepted the task. Sikula records the branch in its run state, but
+it does not need to switch your current checkout to that branch automatically.
 
 ## Inspect A Run
 
@@ -112,14 +114,30 @@ Check which branch you are on:
 git branch --show-current
 ```
 
-Inspect the generated implementation:
+List the generated task branch:
+
+```bash
+git branch --list 'sikula/build-modern-web-example-*'
+```
+
+Switch to it if you want to inspect or run the generated implementation:
+
+```bash
+git switch sikula/build-modern-web-example-<task-id>
+```
+
+Then inspect the generated implementation:
 
 ```bash
 git diff main...HEAD
 ```
 
 If your default branch is named differently, replace `main` with that branch
-name.
+name. If you stay on your original branch, diff the generated branch directly:
+
+```bash
+git diff main...sikula/build-modern-web-example-<task-id>
+```
 
 Inspect the recorded run state:
 

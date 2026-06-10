@@ -1,6 +1,8 @@
 # Sikula Demo Workflow
 
 This project is intentionally small so the value of Sikula is visible without a large codebase.
+Start with the [project README](../README.md) for the public overview,
+installation link, and full walkthrough.
 
 ## What Sikula Demonstrates Here
 
@@ -25,14 +27,15 @@ Run:
 sikula run .sikula/tasks/build-modern-web-example.md
 ```
 
-Expected output is a normal git branch named like `sikula/build-modern-web-example-<task-id>` with a committed implementation.
+Expected output is a normal git branch named like `sikula/build-modern-web-example-<task-id>` with a committed implementation. Sikula records that branch in the run state; it does not need to switch your current checkout automatically.
 
 ## What To Inspect After A Run
 
 ```bash
 sikula status
 git branch --show-current
-git diff main...HEAD
+git branch --list 'sikula/build-modern-web-example-*'
+git diff main...sikula/build-modern-web-example-<task-id>
 ```
 
 Also inspect `.sikula/state/` for the recorded task state. It contains the phase outputs, validation results, review/security findings, and final metadata that make the run auditable.
